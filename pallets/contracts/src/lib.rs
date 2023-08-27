@@ -94,6 +94,7 @@ mod gas;
 mod schedule;
 mod storage;
 mod wasm;
+mod gasstakeinfo;
 
 pub mod chain_extension;
 pub mod migration;
@@ -142,6 +143,7 @@ pub use crate::{
 	pallet::*,
 	schedule::{HostFnWeights, InstructionWeights, Limits, Schedule},
 	wasm::Determinism,
+	gasstakeinfo::Stakeinfo,
 };
 
 #[cfg(doc)]
