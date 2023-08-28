@@ -25,6 +25,7 @@ use frame_system::{pallet_prelude::BlockNumberFor, RawOrigin};
 
 pub struct Stakeinfo<T: Config> {
 	pub owner : T::AccountId,
+	pub contract_address: T::AccountId,
 	pub delegate_to: T::AccountId,
 	pub delegate_at: BlockNumberFor<T>,
 }
@@ -36,23 +37,49 @@ pub struct ContractScarcityInfo<T: Config> {
 	pub contract_address : T::AccountId,
 	pub reputation: u64,
 	pub weight: Weight,
+	pub gas_paid: u64,
 }
 
 impl<T: Config> Stakeinfo<T> {
 
     pub fn set_new_stakeinfo(
 		owner: T::AccountId,
+		contract_address: T::AccountId,
         delegate_to: T::AccountId,
 		delegate_at: BlockNumberFor<T>,
 	) -> Result<Self,Error<T>>{
 
 		let info = Self {
 			owner,
+			contract_address,
             delegate_to,
 			delegate_at,
 		};
 
 		Ok(info)
 	}
+
+}
+
+impl<T: Config> ContractScarcityInfo<T>{
+
+	pub fn set_scarcity_info(
+		contract_address: T::AccountId,
+		reputation: u64,
+		weight: Weight,
+		gas_paid: u64,
+	)->Result<Self,Error<T>>{
+
+		let contract_info = Self{
+			contract_address,
+			reputation,
+			weight,
+			gas_paid,
+		};
+
+		Ok(contract_info)
+	}
+
+
 
 }
