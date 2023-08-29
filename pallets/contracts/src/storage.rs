@@ -92,8 +92,9 @@ impl<T: Config> ContractInfo<T> {
 				.expect("Runtime uses a reasonable hash size. Hence sizeof(T::Hash) <= 128; qed")
 		};
 
-		let deposit_account = DepositAccount(T::AddressGenerator::deposit_address(account));
-	    let stak_info = ContractScarcityInfo::<T>::set_scarcity_info(account.clone());
+		let adress = T::AddressGenerator::deposit_address(account);
+		let deposit_account = DepositAccount(adress.clone());
+	    let stak_info = ContractScarcityInfo::<T>::set_scarcity_info(adress.clone());
 
 		let contract = Self {
 			trie_id,
