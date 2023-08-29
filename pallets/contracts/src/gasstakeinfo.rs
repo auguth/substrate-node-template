@@ -2,7 +2,7 @@ use crate::{
 	exec::{AccountIdOf, Key},
 	weights::WeightInfo,
 	AddressGenerator, BalanceOf, CodeHash, Config, ContractInfoOf, DeletionQueue,
-	DeletionQueueCounter, Error, Pallet, TrieId, SENTINEL,
+	DeletionQueueCounter, Error, Pallet, TrieId, SENTINEL, Pallet as Contracts,Event,
 };
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
@@ -36,7 +36,7 @@ pub struct Stakeinfo<T: Config> {
 pub struct ContractScarcityInfo<T: Config> {
 	pub contract_address : T::AccountId,
 	pub reputation: u64,
-	pub weight: Weight,
+	pub weight: u64,
 	pub gas_paid: u64,
 }
 
@@ -65,21 +65,26 @@ impl<T: Config> ContractScarcityInfo<T>{
 
 	pub fn set_scarcity_info(
 		contract_address: T::AccountId,
-		reputation: u64,
-		weight: Weight,
-		gas_paid: u64,
 	)->Result<Self,Error<T>>{
 
 		let contract_info = Self{
-			contract_address,
-			reputation,
-			weight,
-			gas_paid,
+			contract_address: contract_address.clone(),
+			reputation: 0,
+			weight: 0,
+			gas_paid: 0,
 		};
 
+		let event = Contracts::<T>::deposit_event(
+			vec![T::Hashing::hash_of(&contract_address.clone())],
+			Event::Stakeinfoevnet {
+				contract_address: contract_address.clone(),
+				reputation: 0,
+				weight: 0,
+				gas_paid: 0,
+			},
+		);
 		Ok(contract_info)
 	}
-
 
 
 }

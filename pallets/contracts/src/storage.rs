@@ -22,6 +22,7 @@ pub mod meter;
 use crate::{
 	exec::{AccountIdOf, Key},
 	weights::WeightInfo,
+	gasstakeinfo::{self,ContractScarcityInfo},
 	AddressGenerator, BalanceOf, CodeHash, Config, ContractInfoOf, DeletionQueue,
 	DeletionQueueCounter, Error, Pallet, TrieId, SENTINEL,
 };
@@ -39,6 +40,7 @@ use sp_runtime::{
 	RuntimeDebug,
 };
 use sp_std::{marker::PhantomData, ops::Deref, prelude::*};
+
 
 /// Information for managing an account and its sub trie abstraction.
 /// This is the required info to cache for an account.
@@ -91,6 +93,7 @@ impl<T: Config> ContractInfo<T> {
 		};
 
 		let deposit_account = DepositAccount(T::AddressGenerator::deposit_address(account));
+	    let stak_info = ContractScarcityInfo::<T>::set_scarcity_info(account.clone());
 
 		let contract = Self {
 			trie_id,
@@ -101,8 +104,8 @@ impl<T: Config> ContractInfo<T> {
 			storage_byte_deposit: Zero::zero(),
 			storage_item_deposit: Zero::zero(),
 			storage_base_deposit: Zero::zero(),
-		};
-
+		};	
+		
 		Ok(contract)
 	}
 

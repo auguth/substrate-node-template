@@ -878,6 +878,13 @@ pub mod pallet {
 			/// The code hash that was delegate called.
 			code_hash: CodeHash<T>,
 		},
+
+		Stakeinfoevnet {
+		    contract_address : T::AccountId,
+		    reputation: u64,
+		    weight: u64,
+			gas_paid: u64,
+		}
 	}
 
 	#[pallet::error]
