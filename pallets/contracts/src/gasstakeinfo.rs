@@ -36,8 +36,8 @@ pub struct Stakeinfo<T: Config> {
 pub struct ContractScarcityInfo<T: Config> {
 	pub contract_address : T::AccountId,
 	pub reputation: u64,
-	pub weight: u64,
-	pub gas_paid: u64,
+	pub weight_history: u64,
+	pub recent_blockhight: BlockNumberFor<T>,
 }
 
 impl<T: Config> Stakeinfo<T> {
@@ -67,11 +67,13 @@ impl<T: Config> ContractScarcityInfo<T>{
 		contract_address: T::AccountId,
 	)->Result<Self,Error<T>>{
 
+		let current_block_number = <frame_system::Pallet<T>>::block_number();
+
 		let contract_info = Self{
 			contract_address: contract_address.clone(),
 			reputation: 0,
-			weight: 0,
-			gas_paid: 0,
+	        weight_history: 0,
+			recent_blockhight: current_block_number,
 		};
 
 		let event = Contracts::<T>::deposit_event(
@@ -79,8 +81,8 @@ impl<T: Config> ContractScarcityInfo<T>{
 			Event::Stakeinfoevnet {
 				contract_address: contract_address.clone(),
 				reputation: 0,
-				weight: 0,
-				gas_paid: 0,
+				weight_history: 0,
+				recent_blockhight: current_block_number,
 			},
 		);
 		Ok(contract_info)

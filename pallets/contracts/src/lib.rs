@@ -882,8 +882,8 @@ pub mod pallet {
 		Stakeinfoevnet {
 		    contract_address : T::AccountId,
 		    reputation: u64,
-		    weight: u64,
-			gas_paid: u64,
+		    weight_history: u64,
+			recent_blockhight: BlockNumberFor<T>,
 		}
 	}
 
