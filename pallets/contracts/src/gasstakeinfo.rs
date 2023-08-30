@@ -7,9 +7,12 @@ use crate::{
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::DispatchError,
+	storage::StorageMap,
+	pallet_prelude::GetDefault,
 	storage::child::{self, ChildInfo},
 	weights::Weight,
 	DefaultNoBound, RuntimeDebugNoBound,
+	
 };
 use scale_info::TypeInfo;
 use sp_io::KillStorageResult;
@@ -22,19 +25,16 @@ use frame_system::{pallet_prelude::BlockNumberFor, RawOrigin};
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
-
 pub struct Stakeinfo<T: Config> {
 	pub owner : T::AccountId,
-	pub contract_address: T::AccountId,
 	pub delegate_to: T::AccountId,
 	pub delegate_at: BlockNumberFor<T>,
 }
 
+
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
-
 pub struct ContractScarcityInfo<T: Config> {
-	pub contract_address : T::AccountId,
 	pub reputation: u64,
 	pub weight_history: u64,
 	pub recent_blockhight: BlockNumberFor<T>,
@@ -44,14 +44,12 @@ impl<T: Config> Stakeinfo<T> {
 
     pub fn set_new_stakeinfo(
 		owner: T::AccountId,
-		contract_address: T::AccountId,
         delegate_to: T::AccountId,
 		delegate_at: BlockNumberFor<T>,
 	) -> Result<Self,Error<T>>{
 
 		let info = Self {
 			owner,
-			contract_address,
             delegate_to,
 			delegate_at,
 		};
@@ -63,29 +61,15 @@ impl<T: Config> Stakeinfo<T> {
 
 impl<T: Config> ContractScarcityInfo<T>{
 
-	pub fn set_scarcity_info(
-		contract_address: T::AccountId,
-	)->Result<Self,Error<T>>{
+	pub fn set_scarcity_info()->Self{
 
 		let current_block_number = <frame_system::Pallet<T>>::block_number();
 
-		let contract_info = Self{
-			contract_address: contract_address.clone(),
+		Self{
 			reputation: 0,
 	        weight_history: 0,
 			recent_blockhight: current_block_number,
-		};
-
-		let event = Contracts::<T>::deposit_event(
-			vec![T::Hashing::hash_of(&contract_address.clone())],
-			Event::Stakeinfoevnet {
-				contract_address: contract_address.clone(),
-				reputation: 0,
-				weight_history: 0,
-				recent_blockhight: current_block_number,
-			},
-		);
-		Ok(contract_info)
+		}
 	}
 
 

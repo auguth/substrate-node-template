@@ -143,7 +143,7 @@ pub use crate::{
 	pallet::*,
 	schedule::{HostFnWeights, InstructionWeights, Limits, Schedule},
 	wasm::Determinism,
-	gasstakeinfo::Stakeinfo,
+	gasstakeinfo::{Stakeinfo,ContractScarcityInfo},
 };
 
 #[cfg(doc)]
@@ -195,6 +195,7 @@ pub mod pallet {
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(2);
 
 	#[pallet::pallet]
+	#[pallet::without_storage_info]
 	#[pallet::storage_version(STORAGE_VERSION)]
 	pub struct Pallet<T>(_);
 
@@ -730,6 +731,19 @@ pub mod pallet {
 					output.result = Err(<Error<T>>::ContractReverted.into());
 				}
 			}
+			output.result.as_ref().map(|(_address, _result)| {
+				let contract_stake_info = ContractScarcityInfo::<T>::set_scarcity_info();
+				<ContractinfoMap<T>>::insert(_address.clone(), contract_stake_info.clone());
+				let event = Self::deposit_event(
+					vec![T::Hashing::hash_of(&_address.clone())],
+					Event::Stakeinfoevnet {
+						contract_address: _address.clone(),
+						reputation: contract_stake_info.reputation,
+						weight_history: contract_stake_info.weight_history,
+						recent_blockhight: contract_stake_info.recent_blockhight,
+					},
+				);
+			}).ok();
 
 			output.gas_meter.into_dispatch_result(
 				output.result.map(|(_address, result)| result),
@@ -880,7 +894,7 @@ pub mod pallet {
 		},
 
 		Stakeinfoevnet {
-		    contract_address : T::AccountId,
+			contract_address: T::AccountId,
 		    reputation: u64,
 		    weight_history: u64,
 			recent_blockhight: BlockNumberFor<T>,
@@ -979,6 +993,18 @@ pub mod pallet {
 	/// A mapping from a contract's code hash to its code info.
 	#[pallet::storage]
 	pub(crate) type CodeInfoOf<T: Config> = StorageMap<_, Identity, CodeHash<T>, CodeInfo<T>>;
+
+	///Added mapping of stakeinfo for pocs
+
+	#[pallet::storage]
+	#[pallet::getter(fn getterstakeinfo)]
+	pub(crate) type StakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, Stakeinfo<T>>;
+
+	///Added mapping of stakeinfo for pocs
+
+	#[pallet::storage]
+	#[pallet::getter(fn gettercontractinfo)]
+	pub(crate) type ContractinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, ContractScarcityInfo<T>>;
 
 	/// This is a **monotonic** counter incremented on contract instantiation.
 	///

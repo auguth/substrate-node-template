@@ -94,8 +94,7 @@ impl<T: Config> ContractInfo<T> {
 
 		let adress = T::AddressGenerator::deposit_address(account);
 		let deposit_account = DepositAccount(adress.clone());
-	    let stak_info = ContractScarcityInfo::<T>::set_scarcity_info(adress.clone());
-
+		
 		let contract = Self {
 			trie_id,
 			deposit_account,
