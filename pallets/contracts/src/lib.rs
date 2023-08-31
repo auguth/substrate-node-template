@@ -143,7 +143,7 @@ pub use crate::{
 	pallet::*,
 	schedule::{HostFnWeights, InstructionWeights, Limits, Schedule},
 	wasm::Determinism,
-	gasstakeinfo::{Stakeinfo,ContractScarcityInfo},
+	gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo},
 };
 
 #[cfg(doc)]
@@ -481,6 +481,7 @@ pub mod pallet {
 			code: Vec<u8>,
 			data: Vec<u8>,
 			salt: Vec<u8>,
+			delegate_to: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			Self::instantiate_with_code(
 				origin,
@@ -490,6 +491,7 @@ pub mod pallet {
 				code,
 				data,
 				salt,
+				delegate_to,
 			)
 		}
 
@@ -696,6 +698,7 @@ pub mod pallet {
 			code: Vec<u8>,
 			data: Vec<u8>,
 			salt: Vec<u8>,
+			delegate_to: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			Migration::<T>::ensure_migrated()?;
 			let origin = ensure_signed(origin)?;
@@ -716,7 +719,7 @@ pub mod pallet {
 			let data_len = data.len() as u32;
 			let salt_len = salt.len() as u32;
 			let common = CommonInput {
-				origin: Origin::from_account_id(origin),
+				origin: Origin::from_account_id(origin.clone()),
 				value,
 				data,
 				gas_limit,
@@ -731,16 +734,29 @@ pub mod pallet {
 					output.result = Err(<Error<T>>::ContractReverted.into());
 				}
 			}
+
+			/// impl maps of pocs 
 			output.result.as_ref().map(|(_address, _result)| {
 				let contract_stake_info = ContractScarcityInfo::<T>::set_scarcity_info();
-				<ContractinfoMap<T>>::insert(_address.clone(), contract_stake_info.clone());
-				let event = Self::deposit_event(
+				let account_stake_info = AccountStakeinfo::<T>::set_new_stakeinfo(origin.clone(),delegate_to);
+				<ContractStakeinfoMap<T>>::insert(_address.clone(), contract_stake_info.clone());
+				<AccountStakeinfoMap<T>>::insert(_address.clone(),account_stake_info.clone());
+				let contractinfoevent = Self::deposit_event(
 					vec![T::Hashing::hash_of(&_address.clone())],
-					Event::Stakeinfoevnet {
+					Event::ContractStakeinfoevnet {
 						contract_address: _address.clone(),
 						reputation: contract_stake_info.reputation,
 						weight_history: contract_stake_info.weight_history,
 						recent_blockhight: contract_stake_info.recent_blockhight,
+					},
+				);
+				let accountinfoevent = Self::deposit_event(
+					vec![T::Hashing::hash_of(&_address.clone())],
+					Event::AccountStakeinfoevnet {
+						contract_address: _address.clone(),
+						owner: account_stake_info.owner,
+						delegate_to: account_stake_info.delegate_to,
+						delegate_at: account_stake_info.delegate_at,
 					},
 				);
 			}).ok();
@@ -893,12 +909,19 @@ pub mod pallet {
 			code_hash: CodeHash<T>,
 		},
 
-		Stakeinfoevnet {
+		ContractStakeinfoevnet {
 			contract_address: T::AccountId,
 		    reputation: u64,
 		    weight_history: u64,
 			recent_blockhight: BlockNumberFor<T>,
-		}
+		},
+
+		AccountStakeinfoevnet {
+			contract_address: T::AccountId,
+		    owner: T::AccountId,
+		    delegate_to: T::AccountId,
+			delegate_at: BlockNumberFor<T>,
+		},
 	}
 
 	#[pallet::error]
@@ -998,13 +1021,13 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn getterstakeinfo)]
-	pub(crate) type StakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, Stakeinfo<T>>;
+	pub(crate) type AccountStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, AccountStakeinfo<T>>;
 
 	///Added mapping of stakeinfo for pocs
 
 	#[pallet::storage]
 	#[pallet::getter(fn gettercontractinfo)]
-	pub(crate) type ContractinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, ContractScarcityInfo<T>>;
+	pub(crate) type ContractStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, ContractScarcityInfo<T>>;
 
 	/// This is a **monotonic** counter incremented on contract instantiation.
 	///
