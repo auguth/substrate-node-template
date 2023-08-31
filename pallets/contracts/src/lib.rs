@@ -481,7 +481,6 @@ pub mod pallet {
 			code: Vec<u8>,
 			data: Vec<u8>,
 			salt: Vec<u8>,
-			delegate_to: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			Self::instantiate_with_code(
 				origin,
@@ -491,7 +490,6 @@ pub mod pallet {
 				code,
 				data,
 				salt,
-				delegate_to,
 			)
 		}
 
@@ -698,7 +696,6 @@ pub mod pallet {
 			code: Vec<u8>,
 			data: Vec<u8>,
 			salt: Vec<u8>,
-			delegate_to: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			Migration::<T>::ensure_migrated()?;
 			let origin = ensure_signed(origin)?;
@@ -738,7 +735,7 @@ pub mod pallet {
 			/// impl maps of pocs 
 			output.result.as_ref().map(|(_address, _result)| {
 				let contract_stake_info = ContractScarcityInfo::<T>::set_scarcity_info();
-				let account_stake_info = AccountStakeinfo::<T>::set_new_stakeinfo(origin.clone(),delegate_to);
+				let account_stake_info = AccountStakeinfo::<T>::set_new_stakeinfo(origin.clone(),origin.clone());
 				<ContractStakeinfoMap<T>>::insert(_address.clone(), contract_stake_info.clone());
 				<AccountStakeinfoMap<T>>::insert(_address.clone(),account_stake_info.clone());
 				let contractinfoevent = Self::deposit_event(
@@ -1618,27 +1615,27 @@ impl<T: Config> Pallet<T> {
 		Weight::from_parts(gas_limit, u64::from(T::MaxCodeLen::get()) * 2)
 	}
 
-	/// funtion to update delegateto for pocs 
-	pub fn update_delegate(
-		origin: OriginFor<T>,
-		contract_address: T::AccountId,
-		delegate_to: T::AccountId,
-	) {
-		let origin = ensure_signed(origin);
-		let account_stake_info = Self::getterstakeinfo(&contract_address);
+	// /// funtion to update delegateto for pocs 
+	// pub fn update_delegate(
+	// 	origin: OriginFor<T>,
+	// 	contract_address: T::AccountId,
+	// 	delegate_to: T::AccountId,
+	// ) {
+	// 	let origin = ensure_signed(origin);
+	// 	let account_stake_info = Self::getterstakeinfo(&contract_address);
 
-		//TODO: complete this funtion to update the delegateto
-		let eventemit = Self::deposit_event(
-			vec![T::Hashing::hash_of(&contract_address.clone())],
-			Event::AccountStakeinfoevnet {
-				contract_address: contract_address.clone(),
-				owner: account_stake_info.owner,
-				delegate_to: account_stake_info.delegate_to,
-				delegate_at: account_stake_info.delegate_at,
-			},
-		);
+	// 	//TODO: complete this funtion to update the delegateto
+	// 	let eventemit = Self::deposit_event(
+	// 		vec![T::Hashing::hash_of(&contract_address.clone())],
+	// 		Event::AccountStakeinfoevnet {
+	// 			contract_address: contract_address.clone(),
+	// 			owner: account_stake_info.owner,
+	// 			delegate_to: account_stake_info.delegate_to,
+	// 			delegate_at: account_stake_info.delegate_at,
+	// 		},
+	// 	);
 		
-	}
+	// }
 }
 
 sp_api::decl_runtime_apis! {
