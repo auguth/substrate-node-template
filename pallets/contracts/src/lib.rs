@@ -767,6 +767,22 @@ pub mod pallet {
 			)
 		}
 
+		/// funtion to update delegateto for pocs 
+		
+		// #[pallet::call_index(10)]
+		// #[pallet::weight(T::WeightInfo::update_delegate().saturating_add(*gas_limit))]
+		// pub fn update_delegate(
+		// 	origin: OriginFor<T>,
+		// 	contract_address: T::AccountId,
+		// 	delegate_to: T::AccountId,
+		// ) -> DispatchResultWithPostInfo {
+		// 	let origin = ensure_signed(origin)?;
+		// 	let account_stake_info = Self::getterstakeinfo(&contract_address);
+
+		// 	//TODO: complete this funtion to update the delegateto
+			
+		// }
+
 		/// Instantiates a contract from a previously deployed wasm binary.
 		///
 		/// This function is identical to [`Self::instantiate_with_code`] but without the
