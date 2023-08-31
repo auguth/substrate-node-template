@@ -64,9 +64,35 @@ impl<T: Config> ContractScarcityInfo<T>{
 		let current_block_number = <frame_system::Pallet<T>>::block_number();
 
 		Self{
-			reputation: 0,
-	        weight_history: 0,
+			reputation: 1,
+	        weight_history: 1,
 			recent_blockhight: current_block_number,
+		}
+	}
+
+	pub fn update_scarcity_info(
+		current_reputation: u64,
+		new_weight_history: u64,
+		old_block_hight: BlockNumberFor<T>,
+	)-> Self{
+
+		let current_block_hight = <frame_system::Pallet<T>>::block_number();
+		let mut new_reputation: u64 = 0;
+		let mut new_recent_blockhight: BlockNumberFor<T> = current_block_hight;
+		if current_block_hight >  old_block_hight{
+		let new_reputation = current_reputation + 1;
+		let new_recent_blockhight = current_block_hight;
+		}
+		else{
+		 let new_reputation = current_reputation;
+		 let new_recent_blockhight = old_block_hight;
+		}
+		
+		Self{
+
+			reputation: new_reputation,
+			weight_history: new_weight_history,
+			recent_blockhight: new_recent_blockhight,
 		}
 	}
 

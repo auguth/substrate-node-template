@@ -767,22 +767,6 @@ pub mod pallet {
 			)
 		}
 
-		/// funtion to update delegateto for pocs 
-		
-		// #[pallet::call_index(10)]
-		// #[pallet::weight(T::WeightInfo::update_delegate().saturating_add(*gas_limit))]
-		// pub fn update_delegate(
-		// 	origin: OriginFor<T>,
-		// 	contract_address: T::AccountId,
-		// 	delegate_to: T::AccountId,
-		// ) -> DispatchResultWithPostInfo {
-		// 	let origin = ensure_signed(origin)?;
-		// 	let account_stake_info = Self::getterstakeinfo(&contract_address);
-
-		// 	//TODO: complete this funtion to update the delegateto
-			
-		// }
-
 		/// Instantiates a contract from a previously deployed wasm binary.
 		///
 		/// This function is identical to [`Self::instantiate_with_code`] but without the
@@ -1632,6 +1616,28 @@ impl<T: Config> Pallet<T> {
 	/// zero or an old `Call` will just fail with OutOfGas.
 	fn compat_weight_limit(gas_limit: OldWeight) -> Weight {
 		Weight::from_parts(gas_limit, u64::from(T::MaxCodeLen::get()) * 2)
+	}
+
+	/// funtion to update delegateto for pocs 
+	pub fn update_delegate(
+		origin: OriginFor<T>,
+		contract_address: T::AccountId,
+		delegate_to: T::AccountId,
+	) {
+		let origin = ensure_signed(origin);
+		let account_stake_info = Self::getterstakeinfo(&contract_address);
+
+		//TODO: complete this funtion to update the delegateto
+		let eventemit = Self::deposit_event(
+			vec![T::Hashing::hash_of(&contract_address.clone())],
+			Event::AccountStakeinfoevnet {
+				contract_address: contract_address.clone(),
+				owner: account_stake_info.owner,
+				delegate_to: account_stake_info.delegate_to,
+				delegate_at: account_stake_info.delegate_at,
+			},
+		);
+		
 	}
 }
 
