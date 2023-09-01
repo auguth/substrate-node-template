@@ -14,6 +14,7 @@ use frame_support::{
 	DefaultNoBound, RuntimeDebugNoBound,
 	
 };
+
 use scale_info::TypeInfo;
 use sp_io::KillStorageResult;
 use sp_runtime::{
@@ -36,7 +37,7 @@ pub struct AccountStakeinfo<T: Config> {
 #[scale_info(skip_type_params(T))]
 pub struct ContractScarcityInfo<T: Config> {
 	pub reputation: u64,
-	pub weight_history: u64,
+	pub weight_history: Weight,
 	pub recent_blockhight: BlockNumberFor<T>,
 }
 
@@ -62,38 +63,44 @@ impl<T: Config> ContractScarcityInfo<T>{
 	pub fn set_scarcity_info()->Self{
 
 		let current_block_number = <frame_system::Pallet<T>>::block_number();
-
 		Self{
 			reputation: 1,
-	        weight_history: 1,
+	        weight_history: Weight::zero(),
 			recent_blockhight: current_block_number,
 		}
 	}
 
 	pub fn update_scarcity_info(
 		current_reputation: u64,
-		new_weight_history: u64,
+		new_weight_history: Weight,
 		old_block_hight: BlockNumberFor<T>,
 	)-> Self{
 
 		let current_block_hight = <frame_system::Pallet<T>>::block_number();
-		let mut new_reputation: u64 = 0;
-		let mut new_recent_blockhight: BlockNumberFor<T> = current_block_hight;
-		if current_block_hight >  old_block_hight{
+
+		if current_block_hight > old_block_hight{
 		let new_reputation = current_reputation + 1;
 		let new_recent_blockhight = current_block_hight;
-		}
-		else{
-		 let new_reputation = current_reputation;
-		 let new_recent_blockhight = old_block_hight;
-		}
-		
+
 		Self{
 
 			reputation: new_reputation,
 			weight_history: new_weight_history,
 			recent_blockhight: new_recent_blockhight,
 		}
+		}
+		else{
+		 let new_reputation = current_reputation;
+		 let new_recent_blockhight = old_block_hight;
+
+		 Self{
+
+			reputation: new_reputation,
+			weight_history: new_weight_history,
+			recent_blockhight: new_recent_blockhight,
+		}
+		}
+		
 	}
 
 
