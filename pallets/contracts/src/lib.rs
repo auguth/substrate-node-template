@@ -651,11 +651,20 @@ pub mod pallet {
 			};
 			let dest = T::Lookup::lookup(dest)?;
 
+			let mut output =
+				CallInput::<T> { dest, determinism: Determinism::Enforced }.run_guarded(common);
+			if let Ok(retval) = &output.result {
+				if retval.did_revert() {
+					output.result = Err(<Error<T>>::ContractReverted.into());
+				}
+			}
+
 			//pocs 
 			let contract_stake_info: ContractScarcityInfo<T> = Self::gettercontractinfo(&dest).ok_or(<Error<T>>::ContractAddressNotFound)?;
+			let result = output.gas_meter.into_dispatch_result(output.result, T::WeightInfo::call());
 			let new_scarcity_info = ContractScarcityInfo::<T>::update_scarcity_info(
 				contract_stake_info.reputation,
-				(contract_stake_info.weight_history + T::WeightInfo::call()),
+				(contract_stake_info.weight_history),
 				contract_stake_info.recent_blockhight,
 			);
 
@@ -670,15 +679,9 @@ pub mod pallet {
 					recent_blockhight: new_scarcity_info.recent_blockhight,
 				},
 			);
-
-			let mut output =
-				CallInput::<T> { dest, determinism: Determinism::Enforced }.run_guarded(common);
-			if let Ok(retval) = &output.result {
-				if retval.did_revert() {
-					output.result = Err(<Error<T>>::ContractReverted.into());
-				}
-			}
 			output.gas_meter.into_dispatch_result(output.result, T::WeightInfo::call())
+
+
 		}
 
 		/// Instantiates a new contract from the supplied `code` optionally transferring
@@ -803,8 +806,8 @@ pub mod pallet {
 			let new_account_stake_info: AccountStakeinfo<T> = AccountStakeinfo::set_new_stakeinfo(account_stake_info.owner,delegate_to);
 			let new_contract_stake_info: ContractScarcityInfo<T> = ContractScarcityInfo::set_scarcity_info();
 
-			<ContractStakeinfoMap<T>>::insert(contract_address.clone(), new_contract_stake_info.clone());
-			<AccountStakeinfoMap<T>>::insert(contract_address.clone(),new_account_stake_info.clone());
+			<ContractStakeinfoMap<T>>::insert(&contract_address.clone(), new_contract_stake_info.clone());
+			<AccountStakeinfoMap<T>>::insert(&contract_address.clone(),new_account_stake_info.clone());
 
 			let eventemit = Self::deposit_event(
 				vec![T::Hashing::hash_of(&contract_address.clone())],
