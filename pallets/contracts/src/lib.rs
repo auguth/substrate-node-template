@@ -658,27 +658,6 @@ pub mod pallet {
 					output.result = Err(<Error<T>>::ContractReverted.into());
 				}
 			}
-
-			//pocs 
-			let contract_stake_info: ContractScarcityInfo<T> = Self::gettercontractinfo(&dest).ok_or(<Error<T>>::ContractAddressNotFound)?;
-			let new_weight = output.gas_meter.gas_consumed();
-			let new_scarcity_info = ContractScarcityInfo::<T>::update_scarcity_info(
-				contract_stake_info.reputation,
-				(contract_stake_info.weight_history + new_weight),
-				contract_stake_info.recent_blockhight,
-			);
-
-			<ContractStakeinfoMap<T>>::insert(&dest, new_scarcity_info.clone());
-
-			let update_scarcity_info_event = Self::deposit_event(
-				vec![T::Hashing::hash_of(&dest.clone())],
-				Event::ContractStakeinfoevnet {
-					contract_address: dest.clone(),
-					reputation: new_scarcity_info.reputation,
-					weight_history: new_scarcity_info.weight_history,
-					recent_blockhight: new_scarcity_info.recent_blockhight,
-				},
-			);
 			output.gas_meter.into_dispatch_result(output.result, T::WeightInfo::call())
 
 

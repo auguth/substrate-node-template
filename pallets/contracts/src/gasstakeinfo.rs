@@ -79,7 +79,7 @@ impl<T: Config> ContractScarcityInfo<T>{
 		let current_block_hight = <frame_system::Pallet<T>>::block_number();
 
 		if current_block_hight > old_block_hight{
-		let new_reputation = current_reputation + 1;
+		let new_reputation = current_reputation + 10;
 		let new_recent_blockhight = current_block_hight;
 
 		Self{
