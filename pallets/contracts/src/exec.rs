@@ -18,8 +18,9 @@
 use crate::{
 	gas::GasMeter,
 	storage::{self, DepositAccount, WriteOutcome},
+	gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo},
 	BalanceOf, CodeHash, Config, ContractInfo, ContractInfoOf, DebugBufferVec, Determinism, Error,
-	Event, Nonce, Pallet as Contracts, Schedule, System,
+	Event, Nonce, Pallet as Contracts, Schedule, System,ContractStakeinfoMap,
 };
 use frame_support::{
 	crypto::ecdsa::ECDSAExt,
@@ -902,6 +903,29 @@ where
 					);
 				},
 				(ExportedFunction::Call, None) => {
+
+				///pocs call
+
+					let contract_stake_info: ContractScarcityInfo<T> = Contracts::gettercontractinfo(&account_id.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
+					let new_weight = frame.nested_gas.gas_consumed();
+					let new_scarcity_info = ContractScarcityInfo::<T>::update_scarcity_info(
+						contract_stake_info.reputation,
+						(contract_stake_info.weight_history + new_weight),
+						contract_stake_info.recent_blockhight,
+					);
+
+					<ContractStakeinfoMap<T>>::insert(&account_id.clone(), new_scarcity_info.clone());
+
+					let update_scarcity_info_event = Contracts::<T>::deposit_event(
+						vec![T::Hashing::hash_of(&account_id.clone())],
+						Event::ContractStakeinfoevnet {
+							contract_address: account_id.clone(),
+							reputation: new_scarcity_info.reputation,
+							weight_history: new_scarcity_info.weight_history,
+							recent_blockhight: new_scarcity_info.recent_blockhight,
+						},
+					);
+
 					let caller = self.caller();
 					Contracts::<T>::deposit_event(
 						vec![T::Hashing::hash_of(caller), T::Hashing::hash_of(account_id)],

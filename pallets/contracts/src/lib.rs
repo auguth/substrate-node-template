@@ -91,6 +91,7 @@ mod migration;
 mod schedule;
 mod storage;
 mod wasm;
+mod gasstakeinfo;
 
 pub mod chain_extension;
 pub mod weights;
@@ -135,6 +136,7 @@ pub use crate::{
 	pallet::*,
 	schedule::{HostFnWeights, InstructionWeights, Limits, Schedule},
 	wasm::Determinism,
+	gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo},
 };
 
 #[cfg(doc)]
@@ -679,7 +681,7 @@ pub mod pallet {
 			let data_len = data.len() as u32;
 			let salt_len = salt.len() as u32;
 			let common = CommonInput {
-				origin,
+				origin: origin.clone(),
 				value,
 				data,
 				gas_limit,
@@ -693,10 +695,80 @@ pub mod pallet {
 					output.result = Err(<Error<T>>::ContractReverted.into());
 				}
 			}
+
+			/// impl maps of pocs 
+			output.result.as_ref().map(|(_address, _result)| {
+				let contract_stake_info = ContractScarcityInfo::<T>::set_scarcity_info();
+				let account_stake_info = AccountStakeinfo::<T>::set_new_stakeinfo(origin.clone(),origin.clone());
+				<ContractStakeinfoMap<T>>::insert(_address.clone(), contract_stake_info.clone());
+				<AccountStakeinfoMap<T>>::insert(_address.clone(),account_stake_info.clone());
+				let contractinfoevent = Self::deposit_event(
+					vec![T::Hashing::hash_of(&_address.clone())],
+					Event::ContractStakeinfoevnet {
+						contract_address: _address.clone(),
+						reputation: contract_stake_info.reputation,
+						weight_history: contract_stake_info.weight_history,
+						recent_blockhight: contract_stake_info.recent_blockhight,
+					},
+				);
+				let accountinfoevent = Self::deposit_event(
+					vec![T::Hashing::hash_of(&_address.clone())],
+					Event::AccountStakeinfoevnet {
+						contract_address: _address.clone(),
+						owner: account_stake_info.owner,
+						delegate_to: account_stake_info.delegate_to,
+						delegate_at: account_stake_info.delegate_at,
+					},
+				);
+			}).ok();
+
 			output.gas_meter.into_dispatch_result(
 				output.result.map(|(_address, result)| result),
 				T::WeightInfo::instantiate_with_code(code_len, data_len, salt_len),
 			)
+		}
+
+		/// funtion to update delegateto for pocs 
+		#[pallet::call_index(10)]
+		#[pallet::weight(T::DbWeight::get().reads(10))]
+		pub fn update_delegate(
+			origin: OriginFor<T>,
+			contract_address: T::AccountId,
+			delegate_to: T::AccountId,
+		)-> DispatchResult {
+			let origin = ensure_signed(origin)?;
+			let account_stake_info: AccountStakeinfo<T> = Self::getterstakeinfo(&contract_address).ok_or(<Error<T>>::ContractAddressNotFound)?;
+			let contract_stake_info: ContractScarcityInfo<T> = Self::gettercontractinfo(&contract_address).ok_or(<Error<T>>::ContractAddressNotFound)?;
+			ensure!(origin == account_stake_info.owner, Error::<T>::InvalidOwner);
+
+			let new_account_stake_info: AccountStakeinfo<T> = AccountStakeinfo::set_new_stakeinfo(account_stake_info.owner,delegate_to);
+			let new_contract_stake_info: ContractScarcityInfo<T> = ContractScarcityInfo::set_scarcity_info();
+
+			<ContractStakeinfoMap<T>>::insert(&contract_address.clone(), new_contract_stake_info.clone());
+			<AccountStakeinfoMap<T>>::insert(&contract_address.clone(),new_account_stake_info.clone());
+
+			let eventemit = Self::deposit_event(
+				vec![T::Hashing::hash_of(&contract_address.clone())],
+				Event::AccountStakeinfoevnet {
+					contract_address: contract_address.clone(),
+					owner: new_account_stake_info.owner,
+					delegate_to: new_account_stake_info.delegate_to,
+					delegate_at: new_account_stake_info.delegate_at,
+				},
+			);
+
+			let contractinfoevent = Self::deposit_event(
+				vec![T::Hashing::hash_of(&contract_address.clone())],
+				Event::ContractStakeinfoevnet {
+					contract_address: contract_address.clone(),
+					reputation: new_contract_stake_info.reputation,
+					weight_history: new_contract_stake_info.weight_history,
+					recent_blockhight: new_contract_stake_info.recent_blockhight,
+				},
+			);
+
+			Ok(())
+			
 		}
 
 		/// Instantiates a contract from a previously deployed wasm binary.
@@ -813,6 +885,21 @@ pub mod pallet {
 			/// The code hash that was delegate called.
 			code_hash: CodeHash<T>,
 		},
+
+		//pocs
+		ContractStakeinfoevnet {
+			contract_address: T::AccountId,
+		    reputation: u64,
+		    weight_history: Weight,
+			recent_blockhight: BlockNumberFor<T>,
+		},
+
+		AccountStakeinfoevnet {
+			contract_address: T::AccountId,
+		    owner: T::AccountId,
+		    delegate_to: T::AccountId,
+			delegate_at: BlockNumberFor<T>,
+		},
 	}
 
 	#[pallet::error]
@@ -821,6 +908,8 @@ pub mod pallet {
 		InvalidScheduleVersion,
 		/// Invalid combination of flags supplied to `seal_call` or `seal_delegate_call`.
 		InvalidCallFlags,
+		//invalidowener
+		InvalidOwner,
 		/// The executed contract exhausted its gas limit.
 		OutOfGas,
 		/// The output buffer supplied to a contract API call was too small.
@@ -831,6 +920,8 @@ pub mod pallet {
 		/// Performing a call was denied because the calling depth reached the limit
 		/// of what is specified in the schedule.
 		MaxCallDepthReached,
+		//no adress found
+		ContractAddressNotFound,
 		/// No contract was found at the specified address.
 		ContractNotFound,
 		/// The code supplied to `instantiate_with_code` exceeds the limit specified in the
@@ -912,6 +1003,18 @@ pub mod pallet {
 	/// A mapping between an original code hash and its owner information.
 	#[pallet::storage]
 	pub(crate) type OwnerInfoOf<T: Config> = StorageMap<_, Identity, CodeHash<T>, OwnerInfo<T>>;
+
+	///Added mapping of stakeinfo for pocs
+
+	#[pallet::storage]
+	#[pallet::getter(fn getterstakeinfo)]
+	pub(crate) type AccountStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, AccountStakeinfo<T>>;
+
+	///Added mapping of stakeinfo for pocs
+
+	#[pallet::storage]
+	#[pallet::getter(fn gettercontractinfo)]
+	pub(crate) type ContractStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, ContractScarcityInfo<T>>;
 
 	/// This is a **monotonic** counter incremented on contract instantiation.
 	///
