@@ -4331,7 +4331,7 @@ dependencies = [
  "node-primitives",
  "pallet-assets",
  "pallet-authorship",
- "pallet-babe",
+ "pallet-babe 4.0.0-dev",
  "pallet-bags-list",
  "pallet-balances",
  "pallet-contracts",
@@ -4591,9 +4591,37 @@ dependencies = [
 [[package]]
 name = "pallet-babe"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40#98f2e3451c9143278ec53c6718940aeabcd3b68a"
 dependencies = [
  "frame-benchmarking",
+ "frame-election-provider-support",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-authorship",
+ "pallet-balances",
+ "pallet-offences",
+ "pallet-session",
+ "pallet-staking",
+ "pallet-staking-reward-curve",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-application-crypto",
+ "sp-consensus-babe",
+ "sp-consensus-vrf",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-session",
+ "sp-staking",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-babe"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40#98f2e3451c9143278ec53c6718940aeabcd3b68a"
+dependencies = [
  "frame-support",
  "frame-system",
  "log",
@@ -4827,7 +4855,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
- "pallet-babe",
+ "pallet-babe 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40)",
  "pallet-balances",
  "pallet-grandpa",
  "pallet-im-online",

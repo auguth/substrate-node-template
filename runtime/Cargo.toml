@@ -17,7 +17,7 @@ codec = { package = "parity-scale-codec", version = "3.2.2", default-features = 
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 log = { version = "0.4.17", default-features = false }
 
-pallet-babe = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.40" }
+pallet-babe = { version = "4.0.0-dev", default-features = false, path = "../pallets/babe"}
 pallet-balances = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.40" }
 frame-support = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.40" }
 pallet-grandpa = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.40" }
