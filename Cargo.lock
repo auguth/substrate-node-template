@@ -4343,8 +4343,8 @@ dependencies = [
  "pallet-offences",
  "pallet-offences-benchmarking",
  "pallet-session",
- "pallet-staking",
- "pallet-staking-reward-curve",
+ "pallet-staking 4.0.0-dev",
+ "pallet-staking-reward-curve 4.0.0-dev",
  "pallet-sudo",
  "pallet-template",
  "pallet-timestamp",
@@ -4601,8 +4601,8 @@ dependencies = [
  "pallet-balances",
  "pallet-offences",
  "pallet-session",
- "pallet-staking",
- "pallet-staking-reward-curve",
+ "pallet-staking 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40)",
+ "pallet-staking-reward-curve 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40)",
  "pallet-timestamp",
  "parity-scale-codec",
  "scale-info",
@@ -4861,7 +4861,7 @@ dependencies = [
  "pallet-im-online",
  "pallet-offences",
  "pallet-session",
- "pallet-staking",
+ "pallet-staking 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40)",
  "parity-scale-codec",
  "scale-info",
  "sp-runtime",
@@ -4893,6 +4893,36 @@ dependencies = [
 [[package]]
 name = "pallet-staking"
 version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-election-provider-support",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-authorship",
+ "pallet-bags-list",
+ "pallet-balances",
+ "pallet-session",
+ "pallet-staking-reward-curve 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40)",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "rand_chacha 0.2.2",
+ "scale-info",
+ "serde",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-io",
+ "sp-npos-elections",
+ "sp-runtime",
+ "sp-staking",
+ "sp-std",
+ "sp-tracing",
+ "substrate-test-utils",
+]
+
+[[package]]
+name = "pallet-staking"
+version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40#98f2e3451c9143278ec53c6718940aeabcd3b68a"
 dependencies = [
  "frame-benchmarking",
@@ -4910,6 +4940,17 @@ dependencies = [
  "sp-runtime",
  "sp-staking",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-staking-reward-curve"
+version = "4.0.0-dev"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "sp-runtime",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -8521,6 +8562,27 @@ dependencies = [
  "substrate-build-script-utils",
  "substrate-frame-rpc-system",
  "try-runtime-cli",
+]
+
+[[package]]
+name = "substrate-test-utils"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40#98f2e3451c9143278ec53c6718940aeabcd3b68a"
+dependencies = [
+ "futures",
+ "substrate-test-utils-derive",
+ "tokio",
+]
+
+[[package]]
+name = "substrate-test-utils-derive"
+version = "0.10.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40#98f2e3451c9143278ec53c6718940aeabcd3b68a"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
