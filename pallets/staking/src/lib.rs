@@ -299,7 +299,7 @@ pub mod weights;
 
 mod pallet;
 
-use codec::{Decode, Encode, HasCompact, MaxEncodedLen};
+use codec::{Decode, Encode, HasCompact, MaxEncodedLen,};
 use frame_support::{
 	traits::{Currency, Defensive, Get},
 	weights::Weight,
@@ -315,10 +315,13 @@ use sp_staking::{
 	offence::{Offence, OffenceError, ReportOffence},
 	EraIndex, SessionIndex,
 };
-use sp_std::{collections::btree_map::BTreeMap, prelude::*};
+
+use sp_std::{collections::btree_map::BTreeMap,prelude::*};
 pub use weights::WeightInfo;
 
 pub use pallet::{pallet::*, *};
+
+pub(crate) use pallet_contracts;
 
 pub(crate) const LOG_TARGET: &str = "runtime::staking";
 

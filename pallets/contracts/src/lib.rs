@@ -91,7 +91,7 @@ mod migration;
 mod schedule;
 mod storage;
 mod wasm;
-mod gasstakeinfo;
+pub mod gasstakeinfo;
 
 pub mod chain_extension;
 pub mod weights;
@@ -1008,13 +1008,13 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn getterstakeinfo)]
-	pub(crate) type AccountStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, AccountStakeinfo<T>>;
+	pub type AccountStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, AccountStakeinfo<T>>;
 
 	///Added mapping of stakeinfo for pocs
 
 	#[pallet::storage]
 	#[pallet::getter(fn gettercontractinfo)]
-	pub(crate) type ContractStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, ContractScarcityInfo<T>>;
+	pub type ContractStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, ContractScarcityInfo<T>>;
 
 	/// This is a **monotonic** counter incremented on contract instantiation.
 	///

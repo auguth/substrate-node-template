@@ -36,6 +36,7 @@ use sp_runtime::{
 	traits::{CheckedSub, SaturatedConversion, StaticLookup, Zero},
 	ArithmeticError, Perbill, Percent,
 };
+
 use sp_staking::{EraIndex, SessionIndex};
 use sp_std::prelude::*;
 
@@ -48,6 +49,7 @@ use crate::{
 	EraRewardPoints, Exposure, Forcing, NegativeImbalanceOf, Nominations, PositiveImbalanceOf,
 	RewardDestination, SessionInterface, StakingLedger, UnappliedSlash, UnlockChunk,
 	ValidatorPrefs,
+	pallet_contracts::{Pallet as Contracts, Config as ContractConfig,gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo}},
 };
 
 const STAKING_ID: LockIdentifier = *b"staking ";
@@ -83,7 +85,7 @@ pub mod pallet {
 	}
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config{
 		/// The staking balance.
 		type Currency: LockableCurrency<
 			Self::AccountId,
@@ -646,7 +648,6 @@ pub mod pallet {
 				frame_support::assert_ok!(<Pallet<T>>::bond(
 					T::RuntimeOrigin::from(Some(stash.clone()).into()),
 					T::Lookup::unlookup(controller.clone()),
-					balance,
 					RewardDestination::Staked,
 				));
 				frame_support::assert_ok!(match status {
@@ -773,6 +774,7 @@ pub mod pallet {
 		CommissionTooLow,
 		/// Some bound is not met.
 		BoundNotMet,
+		ContractAddressNotFound,
 	}
 
 	#[pallet::hooks]
@@ -851,11 +853,11 @@ pub mod pallet {
 		pub fn bond(
 			origin: OriginFor<T>,
 			controller: AccountIdLookupOf<T>,
-			#[pallet::compact] value: BalanceOf<T>,
 			payee: RewardDestination<T::AccountId>,
 		) -> DispatchResult {
 			let stash = ensure_signed(origin)?;
-
+			let i: u128 = 0;
+			let value: BalanceOf<T> = i.saturated_into::<BalanceOf<T>>();
 			if <Bonded<T>>::contains_key(&stash) {
 				return Err(Error::<T>::AlreadyBonded.into())
 			}
@@ -864,11 +866,6 @@ pub mod pallet {
 
 			if <Ledger<T>>::contains_key(&controller) {
 				return Err(Error::<T>::AlreadyPaired.into())
-			}
-
-			// Reject a bond which is considered to be _dust_.
-			if value < T::Currency::minimum_balance() {
-				return Err(Error::<T>::InsufficientBond.into())
 			}
 
 			frame_system::Pallet::<T>::inc_consumers(&stash).map_err(|_| Error::<T>::BadState)?;
@@ -921,7 +918,12 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			#[pallet::compact] max_additional: BalanceOf<T>,
 		) -> DispatchResult {
-			let stash = ensure_signed(origin)?;
+
+			let origin = ensure_signed(origin)?;
+		
+			let account_stake_info: AccountStakeinfo<T: pallet_contracts::Config> = Contracts::getterstakeinfo(&origin.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
+			
+			let stash = account_stake_info.delegate_to;
 
 			let controller = Self::bonded(&stash).ok_or(Error::<T>::NotStash)?;
 			let mut ledger = Self::ledger(&controller).ok_or(Error::<T>::NotController)?;
