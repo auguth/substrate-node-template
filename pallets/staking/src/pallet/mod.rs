@@ -49,8 +49,8 @@ use crate::{
 	EraRewardPoints, Exposure, Forcing, NegativeImbalanceOf, Nominations, PositiveImbalanceOf,
 	RewardDestination, SessionInterface, StakingLedger, UnappliedSlash, UnlockChunk,
 	ValidatorPrefs,
-	pallet_contracts::{Pallet as Contracts, Config as ContractConfig,gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo}},
 };
+use pallet_contracts::{Pallet as Contracts, Config as ContractConfig,gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo}};
 
 const STAKING_ID: LockIdentifier = *b"staking ";
 // The speculative number of spans are used as an input of the weight annotation of
@@ -87,7 +87,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config{
 		/// The staking balance.
-		type Currency: LockableCurrency<
+		type Currency:LockableCurrency<
 			Self::AccountId,
 			Moment = Self::BlockNumber,
 			Balance = Self::CurrencyBalance,
@@ -832,7 +832,7 @@ pub mod pallet {
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T>  {
 		/// Take the origin account as a stash and lock up `value` of its balance. `controller` will
 		/// be the account that controls it.
 		///
@@ -920,10 +920,9 @@ pub mod pallet {
 		) -> DispatchResult {
 
 			let origin = ensure_signed(origin)?;
-		
-			let account_stake_info: AccountStakeinfo<T: pallet_contracts::Config> = Contracts::getterstakeinfo(&origin.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
+
 			
-			let stash = account_stake_info.delegate_to;
+			let stash = Contracts::<T>::get_validator_account(&origin.clone());
 
 			let controller = Self::bonded(&stash).ok_or(Error::<T>::NotStash)?;
 			let mut ledger = Self::ledger(&controller).ok_or(Error::<T>::NotController)?;

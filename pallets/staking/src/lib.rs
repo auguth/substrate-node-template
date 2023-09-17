@@ -281,6 +281,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "256"]
+#![feature(generic_const_exprs)]
 
 #[cfg(feature = "runtime-benchmarks")]
 pub mod benchmarking;
@@ -321,7 +322,7 @@ pub use weights::WeightInfo;
 
 pub use pallet::{pallet::*, *};
 
-pub(crate) use pallet_contracts;
+pub use pallet_contracts;
 
 pub(crate) const LOG_TARGET: &str = "runtime::staking";
 

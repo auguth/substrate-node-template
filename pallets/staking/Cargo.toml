@@ -53,6 +53,7 @@ rand_chacha = { version = "0.2" }
 
 [features]
 default = ["std"]
+generic-const-expression = []
 std = [
 	"frame-benchmarking?/std",
 	"serde",

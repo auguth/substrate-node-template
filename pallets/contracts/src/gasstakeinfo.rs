@@ -103,3 +103,10 @@ impl<T: Config> ContractScarcityInfo<T>{
 
 
 }
+
+// fn get_validator_account(account: T::AccountId)-> T::AccountId{
+// 	let account_stake_info: AccountStakeinfo<T>= Contracts::getterstakeinfo(&origin.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
+// 	let staker = account_stake_info.delegate_to;
+
+// 	staker
+// }

@@ -173,7 +173,7 @@ pub mod pallet {
 	pub struct Pallet<T>(PhantomData<T>);
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config{
 		/// The time implementation used to supply timestamps to contracts through `seal_now`.
 		type Time: Time;
 
@@ -1289,6 +1289,13 @@ impl<T: Config> Pallet<T> {
 		}
 	}
 
+	pub fn get_validator_account(account: T::AccountId)-> T::AccountId{
+		let account_stake_info = Self::getterstakeinfo(&account.clone()).unwrap();
+		let staker = account_stake_info.delegate_to;
+	
+		staker
+	}
+
 	/// Instantiate a new contract.
 	///
 	/// This function is similar to [`Self::instantiate`], but doesn't perform any address lookups
@@ -1430,6 +1437,7 @@ impl<T: Config> Pallet<T> {
 	fn compat_weight_limit(gas_limit: OldWeight) -> Weight {
 		Weight::from_parts(gas_limit.0, u64::from(T::MaxCodeLen::get()) * 2)
 	}
+
 }
 
 sp_api::decl_runtime_apis! {
