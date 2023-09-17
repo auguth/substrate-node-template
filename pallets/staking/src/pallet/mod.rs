@@ -922,7 +922,7 @@ pub mod pallet {
 			let origin = ensure_signed(origin)?;
 
 			
-			let stash = Contracts::<T>::get_validator_account(&origin.clone());
+			let stash = <pallet_contracts::Pallet<T>::get_validator_account(&origin.clone());
 
 			let controller = Self::bonded(&stash).ok_or(Error::<T>::NotStash)?;
 			let mut ledger = Self::ledger(&controller).ok_or(Error::<T>::NotController)?;
