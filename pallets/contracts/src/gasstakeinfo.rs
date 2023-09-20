@@ -22,6 +22,7 @@ use sp_runtime::{
 use sp_std::{marker::PhantomData, ops::Deref, prelude::*};
 use frame_system::{pallet_prelude::BlockNumberFor, RawOrigin};
 
+
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct AccountStakeinfo<T: Config> {
@@ -30,7 +31,6 @@ pub struct AccountStakeinfo<T: Config> {
 	pub delegate_at: BlockNumberFor<T>,
 }
 
-
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct ContractScarcityInfo<T: Config> {
@@ -38,23 +38,37 @@ pub struct ContractScarcityInfo<T: Config> {
 	pub weight_history: Weight,
 	pub recent_blockhight: BlockNumberFor<T>,
 }
-
-impl<T: Config> AccountStakeinfo<T> {
-
-    pub fn set_new_stakeinfo(
-		owner: T::AccountId,
-        delegate_to: T::AccountId,
-	) -> Self{
-		let current_block_number = <frame_system::Pallet<T>>::block_number();
-
-		Self {
-			owner,
-            delegate_to,
-			delegate_at:current_block_number,
-		}
-	}
-
+pub trait AccountStakeinfoTrait<T: Config> {
+    fn set_new_stakeinfo(owner: T::AccountId, delegate_to: T::AccountId) -> Self;
 }
+
+impl<T: Config> AccountStakeinfoTrait<T> for AccountStakeinfo<T> {
+    fn set_new_stakeinfo(owner: T::AccountId, delegate_to: T::AccountId) -> Self {
+        let current_block_number = <frame_system::Pallet<T>>::block_number();
+
+        Self {
+            owner,
+            delegate_to,
+            delegate_at: current_block_number,
+        }
+    }
+}
+// impl<T: Config> AccountStakeinfoTrait<T> for AccountStakeinfo<T>  {
+
+//     pub fn set_new_stakeinfo(
+// 		owner: T::AccountId,
+//         delegate_to: T::AccountId,
+// 	) -> Self{
+// 		let current_block_number = <frame_system::Pallet<T>>::block_number();
+
+// 		Self {
+// 			owner,
+//             delegate_to,
+// 			delegate_at:current_block_number,
+// 		}
+// 	}
+
+// }
 
 impl<T: Config> ContractScarcityInfo<T>{
 

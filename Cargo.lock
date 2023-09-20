@@ -4894,6 +4894,7 @@ dependencies = [
 name = "pallet-staking"
 version = "4.0.0-dev"
 dependencies = [
+ "bs58",
  "frame-benchmarking",
  "frame-election-provider-support",
  "frame-support",
@@ -4909,6 +4910,7 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "rand_chacha 0.2.2",
+ "rustc-hex",
  "scale-info",
  "serde",
  "sp-application-crypto",

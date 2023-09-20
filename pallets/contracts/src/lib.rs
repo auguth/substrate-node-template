@@ -136,7 +136,7 @@ pub use crate::{
 	pallet::*,
 	schedule::{HostFnWeights, InstructionWeights, Limits, Schedule},
 	wasm::Determinism,
-	gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo},
+	gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo, AccountStakeinfoTrait},
 };
 
 #[cfg(doc)]
@@ -150,6 +150,7 @@ type CodeVec<T> = BoundedVec<u8, <T as Config>::MaxCodeLen>;
 type RelaxedCodeVec<T> = WeakBoundedVec<u8, <T as Config>::MaxCodeLen>;
 type AccountIdLookupOf<T> = <<T as frame_system::Config>::Lookup as StaticLookup>::Source;
 type DebugBufferVec<T> = BoundedVec<u8, <T as Config>::MaxDebugBufferLen>;
+//type AccountId <T> = <T as frame_system::Config>::AccountId;
 
 /// Used as a sentinel value when reading and writing contract memory.
 ///
@@ -231,6 +232,8 @@ pub mod pallet {
 
 		/// Type that allows the runtime authors to add new host functions for a contract to call.
 		type ChainExtension: chain_extension::ChainExtension<Self> + Default;
+
+		type AccountStakeinfo:  AccountStakeinfoTrait<Self>;
 
 		/// Cost schedule and limits.
 		#[pallet::constant]
@@ -1009,6 +1012,17 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn getterstakeinfo)]
 	pub type AccountStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, AccountStakeinfo<T>>;
+
+	// pub trait AccountStakeinfoTrait<T: Config> {
+	// 	fn get_stake_info(account_id: &T::AccountId) -> Option<AccountStakeinfo<T>>;
+	// 	// Add more functions as needed for interacting with the storage item
+	// }
+	
+	// impl<T: Config> AccountStakeinfoTrait<T> for Pallet<T> {
+	// 	fn get_stake_info(account_id: &T::AccountId) -> Option<AccountStakeinfo<T>> {
+	// 		<AccountStakeinfoMap<T>>::get(account_id)
+	// 	}
+	// }
 
 	///Added mapping of stakeinfo for pocs
 

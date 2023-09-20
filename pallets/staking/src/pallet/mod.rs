@@ -31,6 +31,7 @@ use frame_support::{
 	weights::Weight,
 	BoundedVec,
 };
+
 use frame_system::{ensure_root, ensure_signed, pallet_prelude::*};
 use sp_runtime::{
 	traits::{CheckedSub, SaturatedConversion, StaticLookup, Zero},
@@ -39,6 +40,7 @@ use sp_runtime::{
 
 use sp_staking::{EraIndex, SessionIndex};
 use sp_std::prelude::*;
+
 
 mod impls;
 
@@ -49,8 +51,18 @@ use crate::{
 	EraRewardPoints, Exposure, Forcing, NegativeImbalanceOf, Nominations, PositiveImbalanceOf,
 	RewardDestination, SessionInterface, StakingLedger, UnappliedSlash, UnlockChunk,
 	ValidatorPrefs,
+	//use pallet_contracts::{Pallet as Contracts, Config as ContractConfig,gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo}};
+	//pallet_contracts::{Pallet, AccountStakeinfoMap, AccountStakeinfoTrait, gasstakeinfo::AccountStakeinfo} ,
 };
-use pallet_contracts::{Pallet as Contracts, Config as ContractConfig,gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo}};
+
+use pallet_contracts::{AccountStakeinfoMap, AccountStakeinfoTrait, AccountStakeinfo};
+//use frame_system::pallet::AccountId; 
+
+use frame_system::Config as SystemConfig;
+use sp_runtime::AccountId32;
+use rustc_hex::FromHex;
+use scale_info::prelude::format;
+use bs58;
 
 const STAKING_ID: LockIdentifier = *b"staking ";
 // The speculative number of spans are used as an input of the weight annotation of
@@ -68,6 +80,7 @@ pub mod pallet {
 
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(13);
+	
 
 	#[pallet::pallet]
 	#[pallet::storage_version(STORAGE_VERSION)]
@@ -85,7 +98,10 @@ pub mod pallet {
 	}
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config{
+	pub trait Config: frame_system::Config {
+		//type AccountStakeinfoMapConfig: pallet_contracts::Config;
+		type ContractsConfig: pallet_contracts::Config;
+
 		/// The staking balance.
 		type Currency:LockableCurrency<
 			Self::AccountId,
@@ -273,6 +289,11 @@ pub mod pallet {
 		/// Weight information for extrinsics in this pallet.
 		type WeightInfo: WeightInfo;
 	}
+
+
+	#[pallet::storage]
+	#[pallet::getter(fn getterstakeinfo)]
+	pub type AccountStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, AccountStakeinfo<T:: ContractsConfig>>;
 
 	/// The ideal number of active validators.
 	#[pallet::storage]
@@ -580,6 +601,23 @@ pub mod pallet {
 	#[pallet::storage]
 	pub(crate) type ChillThreshold<T: Config> = StorageValue<_, Percent, OptionQuery>;
 
+	// pub struct AccountIdType{}
+
+	// impl  FromStr for AccountIdType{
+	// 	type Err = (); // Customize this error type if needed
+	
+	// 	fn from_str(s: &str) -> Result<Self, Self::Err> {
+	// 		// Add your parsing logic here
+	// 		// If parsing succeeds, create and return an instance of AccountIdType
+	// 		// If parsing fails, return Err(())
+	// 		if s.len() == 10 /* your parsing logic */ {
+	// 			Ok(AccountIdType::<T> { /* initialize fields if any */ })
+	// 		} else {
+	// 			Err(())
+	// 		}
+	// 	}
+	// }
+
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub validator_count: u32,
@@ -776,7 +814,7 @@ pub mod pallet {
 		BoundNotMet,
 		ContractAddressNotFound,
 	}
-
+	
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize(_now: BlockNumberFor<T>) -> Weight {
@@ -921,8 +959,38 @@ pub mod pallet {
 
 			let origin = ensure_signed(origin)?;
 
+			//let origin_ = <T as frame_system::Config>::AccountId::from(stash.clone());
+
+			let account_stake_info = Self::getterstakeinfo(&origin.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
+
 			
-			let stash = <pallet_contracts::Pallet<T>::get_validator_account(&origin.clone());
+			//let stash_ = <AccountStakeinfoMap<T>>::get(&origin_);;
+			let delegated = account_stake_info.delegate_to;
+
+			//let converted: String = delegated.clone().to_string();
+			let converted = format!("{:?}", delegated);
+
+			let mut output: Vec<u8> = bs58::decode("input").into_vec().unwrap();
+
+		  let cut_address_vec:Vec<u8> = output.drain(1..33).collect();
+			let mut array = [0; 32];
+			let bytes = &cut_address_vec[..array.len()]; 
+			array.copy_from_slice(bytes); 
+			let account32: AccountId32 = array.into();
+			let mut to32 = AccountId32::as_ref(&account32);
+			let stash : T::AccountId = T::AccountId::decode(&mut to32).unwrap();
+
+			// match AccountIdType::from_str(origin_) {
+			// 	Ok(parsed_account_id) => {
+			// 		// Successfully parsed account ID
+			// 		// parsed_account_id now holds the parsed value
+			// 	}
+			// 	Err(_) => {
+			// 		// Failed to parse account ID
+			// 	}
+			// }
+
+			//let origin_:<T as frame_system::Config>::AccountId = delegated.into().into();
 
 			let controller = Self::bonded(&stash).ok_or(Error::<T>::NotStash)?;
 			let mut ledger = Self::ledger(&controller).ok_or(Error::<T>::NotController)?;
@@ -950,6 +1018,8 @@ pub mod pallet {
 			}
 			Ok(())
 		}
+
+		
 
 		/// Schedule a portion of the stash to be unlocked ready for transfer out after the bond
 		/// period ends. If this leaves an amount actively bonded less than
