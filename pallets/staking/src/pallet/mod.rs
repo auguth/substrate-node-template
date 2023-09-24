@@ -42,6 +42,8 @@ use sp_std::prelude::*;
 
 mod impls;
 
+mod gasstakeinfo;
+
 pub use impls::*;
 
 use crate::{
@@ -560,6 +562,13 @@ pub mod pallet {
 	#[pallet::getter(fn current_planned_session)]
 	pub type CurrentPlannedSession<T> = StorageValue<_, SessionIndex, ValueQuery>;
 
+	///Added mapping of stakeinfo for pocs
+
+	#[pallet::storage]
+	#[pallet::getter(fn stakeinfo)]
+	pub type StakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>>;
+
+
 	/// Indices of validators that have offended in the active era and whether they are currently
 	/// disabled.
 	///
@@ -774,7 +783,7 @@ pub mod pallet {
 		CommissionTooLow,
 		/// Some bound is not met.
 		BoundNotMet,
-		ContractAddressNotFound,
+		ValidatorNotFound,
 	}
 
 	#[pallet::hooks]
@@ -858,6 +867,7 @@ pub mod pallet {
 			let stash = ensure_signed(origin)?;
 			let i: u128 = 0;
 			let value: BalanceOf<T> = i.saturated_into::<BalanceOf<T>>();
+			<StakeinfoMap<T>>::insert(&stash, value);
 			if <Bonded<T>>::contains_key(&stash) {
 				return Err(Error::<T>::AlreadyBonded.into())
 			}
@@ -919,10 +929,10 @@ pub mod pallet {
 			#[pallet::compact] max_additional: BalanceOf<T>,
 		) -> DispatchResult {
 
-			let origin = ensure_signed(origin)?;
+			let stash = ensure_signed(origin)?;
 
-			
-			let stash = <pallet_contracts::Pallet<T>::get_validator_account(&origin.clone());
+			// <StakeinfoMap<T>>::insert(&stakerid,max_additional);
+			// let stash = pallet_contracts::Pallet::<T>::get_validator_account(&origin.clone().into());
 
 			let controller = Self::bonded(&stash).ok_or(Error::<T>::NotStash)?;
 			let mut ledger = Self::ledger(&controller).ok_or(Error::<T>::NotController)?;
@@ -950,6 +960,43 @@ pub mod pallet {
 			}
 			Ok(())
 		}
+
+
+		#[pallet::call_index(26)]
+		#[pallet::weight(0)]
+		pub fn contract_bond_extra(
+			origin: OriginFor<T>,
+			stakerid: T::AccountId,
+			#[pallet::compact] max_additional: BalanceOf<T>,
+		) -> DispatchResult {
+
+			let stash = ensure_signed(origin)?;
+
+			<StakeinfoMap<T>>::insert(&stakerid,max_additional);
+
+			let controller = Self::bonded(&stash).ok_or(Error::<T>::NotStash)?;
+			let mut ledger = Self::ledger(&controller).ok_or(Error::<T>::NotController)?;
+
+			let stash_balance = T::Currency::free_balance(&stash);
+			if let Some(extra) = stash_balance.checked_sub(&ledger.total) {
+			let extra = extra.min(max_additional);
+			ledger.total += extra;
+			ledger.active += extra;
+		
+			// NOTE: ledger must be updated prior to calling `Self::weight_of`.
+			Self::update_ledger(&controller, &ledger);
+			// update this staker in the sorted list, if they exist in it.
+			if T::VoterList::contains(&stash) {
+				let _ =
+					T::VoterList::on_update(&stash, Self::weight_of(&ledger.stash)).defensive();
+			}
+
+				Self::deposit_event(Event::<T>::Bonded { stash, amount: extra });
+		}
+		Ok(())
+
+		}
+
 
 		/// Schedule a portion of the stash to be unlocked ready for transfer out after the bond
 		/// period ends. If this leaves an amount actively bonded less than
