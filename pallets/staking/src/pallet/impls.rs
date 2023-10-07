@@ -1619,6 +1619,7 @@ impl<T: Config> StakingInterface for Pallet<T> {
 		Self::bond_extra(RawOrigin::Signed(who.clone()).into(), extra)
 	}
 
+
 	fn unbond(who: &Self::AccountId, value: Self::Balance) -> DispatchResult {
 		let ctrl = Self::bonded(who).ok_or(Error::<T>::NotStash)?;
 		Self::unbond(RawOrigin::Signed(ctrl).into(), value)
@@ -1798,4 +1799,5 @@ impl<T: Config> Pallet<T> {
 
 		Ok(())
 	}
+
 }

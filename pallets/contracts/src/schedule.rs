@@ -18,7 +18,7 @@
 //! This module contains the cost schedule and supporting code that constructs a
 //! sane default schedule from a `WeightInfo` implementation.
 
-use crate::{wasm::Determinism, weights::WeightInfo, Config};
+use crate::{wasm::Determinism, weights::ContractWeightInfo, Config};
 
 use codec::{Decode, Encode};
 use frame_support::{weights::Weight, DefaultNoBound};
@@ -441,13 +441,13 @@ macro_rules! replace_token {
 
 macro_rules! call_zero {
 	($name:ident, $( $arg:expr ),*) => {
-		T::WeightInfo::$name($( replace_token!($arg 0) ),*)
+		T::ContractWeightInfo::$name($( replace_token!($arg 0) ),*)
 	};
 }
 
 macro_rules! cost_args {
 	($name:ident, $( $arg: expr ),+) => {
-		(T::WeightInfo::$name($( $arg ),+).saturating_sub(call_zero!($name, $( $arg ),+)))
+		(T::ContractWeightInfo::$name($( $arg ),+).saturating_sub(call_zero!($name, $( $arg ),+)))
 	}
 }
 

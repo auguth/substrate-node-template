@@ -358,7 +358,7 @@ mod v8 {
 	pub fn pre_upgrade<T: Config>() -> Result<(), &'static str> {
 		use frame_support::traits::ReservableCurrency;
 		for (key, value) in ContractInfoOf::<T, OldContractInfo<T>>::iter() {
-			let reserved = T::Currency::reserved_balance(&key);
+			let reserved = T::ContractCurrency::reserved_balance(&key);
 			ensure!(reserved >= value.storage_deposit, "Reserved balance out of sync.");
 		}
 		Ok(())
@@ -437,7 +437,7 @@ mod post_checks {
 	fn v8<T: Config>() -> Result<(), &'static str> {
 		use frame_support::traits::ReservableCurrency;
 		for (key, value) in ContractInfoOf::<T, ContractInfo<T>>::iter() {
-			let reserved = T::Currency::reserved_balance(&key);
+			let reserved = T::ContractCurrency::reserved_balance(&key);
 			let stored = value
 				.storage_base_deposit
 				.saturating_add(value.storage_byte_deposit)

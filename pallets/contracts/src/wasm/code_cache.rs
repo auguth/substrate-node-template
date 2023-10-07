@@ -31,7 +31,7 @@
 use crate::{
 	gas::{GasMeter, Token},
 	wasm::{prepare, PrefabWasmModule},
-	weights::WeightInfo,
+	weights::ContractWeightInfo,
 	CodeHash, CodeStorage, Config, Error, Event, OwnerInfoOf, Pallet, PristineCode, Schedule,
 	Weight,
 };
@@ -95,7 +95,7 @@ pub fn store<T: Config>(mut module: PrefabWasmModule<T>, instantiated: bool) -> 
 				);
 				// This `None` case happens only in freshly uploaded modules. This means that
 				// the `owner` is always the origin of the current transaction.
-				T::Currency::reserve(&new_owner_info.owner, new_owner_info.deposit)
+				T::ContractCurrency::reserve(&new_owner_info.owner, new_owner_info.deposit)
 					.map_err(|_| <Error<T>>::StorageDepositNotEnoughFunds)?;
 				new_owner_info.refcount = if instantiated { 1 } else { 0 };
 				<PristineCode<T>>::insert(&code_hash, orig_code);
@@ -144,7 +144,7 @@ pub fn try_remove<T: Config>(origin: &T::AccountId, code_hash: CodeHash<T>) -> D
 		if let Some(owner_info) = existing {
 			ensure!(owner_info.refcount == 0, <Error<T>>::CodeInUse);
 			ensure!(&owner_info.owner == origin, BadOrigin);
-			T::Currency::unreserve(&owner_info.owner, owner_info.deposit);
+			T::ContractCurrency::unreserve(&owner_info.owner, owner_info.deposit);
 			*existing = None;
 			<PristineCode<T>>::remove(&code_hash);
 			<CodeStorage<T>>::remove(&code_hash);
@@ -231,9 +231,9 @@ impl<T: Config> Token<T> for CodeToken {
 		// point because when charging the general weight for calling the contract we not know the
 		// size of the contract.
 		match *self {
-			Reinstrument(len) => T::WeightInfo::reinstrument(len),
-			Load(len) => T::WeightInfo::call_with_code_per_byte(len)
-				.saturating_sub(T::WeightInfo::call_with_code_per_byte(0)),
+			Reinstrument(len) => T::ContractWeightInfo::reinstrument(len),
+			Load(len) => T::ContractWeightInfo::call_with_code_per_byte(len)
+				.saturating_sub(T::ContractWeightInfo::call_with_code_per_byte(0)),
 		}
 	}
 }

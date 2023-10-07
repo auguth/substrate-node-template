@@ -21,7 +21,7 @@ pub mod meter;
 
 use crate::{
 	exec::{AccountIdOf, StorageKey},
-	weights::WeightInfo,
+	weights::ContractWeightInfo,
 	AddressGenerator, BalanceOf, CodeHash, Config, ContractInfoOf, DeletionQueue, Error, Pallet,
 	TrieId, SENTINEL,
 };
@@ -213,11 +213,11 @@ impl<T: Config> ContractInfo<T> {
 	/// of those keys can be deleted from the deletion queue given the supplied queue length
 	/// and weight limit.
 	pub fn deletion_budget(queue_len: usize, weight_limit: Weight) -> (Weight, u32) {
-		let base_weight = T::WeightInfo::on_process_deletion_queue_batch();
-		let weight_per_queue_item = T::WeightInfo::on_initialize_per_queue_item(1) -
-			T::WeightInfo::on_initialize_per_queue_item(0);
-		let weight_per_key = T::WeightInfo::on_initialize_per_trie_key(1) -
-			T::WeightInfo::on_initialize_per_trie_key(0);
+		let base_weight = T::ContractWeightInfo::on_process_deletion_queue_batch();
+		let weight_per_queue_item = T::ContractWeightInfo::on_initialize_per_queue_item(1) -
+			T::ContractWeightInfo::on_initialize_per_queue_item(0);
+		let weight_per_key = T::ContractWeightInfo::on_initialize_per_trie_key(1) -
+			T::ContractWeightInfo::on_initialize_per_trie_key(0);
 		let decoding_weight = weight_per_queue_item.saturating_mul(queue_len as u64);
 
 		// `weight_per_key` being zero makes no sense and would constitute a failure to

@@ -52,7 +52,6 @@ use crate::{
 	RewardDestination, SessionInterface, StakingLedger, UnappliedSlash, UnlockChunk,
 	ValidatorPrefs,
 };
-use pallet_contracts::{Pallet as Contracts, Config as ContractConfig,gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo}};
 
 const STAKING_ID: LockIdentifier = *b"staking ";
 // The speculative number of spans are used as an input of the weight annotation of
@@ -922,7 +921,7 @@ pub mod pallet {
 		/// ## Complexity
 		/// - Independent of the arguments. Insignificant complexity.
 		/// - O(1).
-		#[pallet::call_index(1)]
+		#[pallet::call_index(26)]
 		#[pallet::weight(T::WeightInfo::bond_extra())]
 		pub fn bond_extra(
 			origin: OriginFor<T>,
@@ -961,28 +960,34 @@ pub mod pallet {
 			Ok(())
 		}
 
-
-		#[pallet::call_index(26)]
+		#[pallet::call_index(1)]
 		#[pallet::weight(0)]
-		pub fn contract_bond_extra(
+		pub fn contracts_bond_extra(
 			origin: OriginFor<T>,
-			stakerid: T::AccountId,
-			#[pallet::compact] max_additional: BalanceOf<T>,
+			validator: <T as frame_system::Config>::AccountId,
+			score: u128,
 		) -> DispatchResult {
 
-			let stash = ensure_signed(origin)?;
+			let stash = validator;
+			let max_additional = (score*1000000000000).saturated_into::<BalanceOf<T>>();
 
-			<StakeinfoMap<T>>::insert(&stakerid,max_additional);
+			// <StakeinfoMap<T>>::insert(&stakerid,max_additional);
+			// let stash = pallet_contracts::Pallet::<T>::get_validator_account(&origin.clone().into());
 
 			let controller = Self::bonded(&stash).ok_or(Error::<T>::NotStash)?;
 			let mut ledger = Self::ledger(&controller).ok_or(Error::<T>::NotController)?;
 
 			let stash_balance = T::Currency::free_balance(&stash);
-			if let Some(extra) = stash_balance.checked_sub(&ledger.total) {
-			let extra = extra.min(max_additional);
+
+			let extra = max_additional;
 			ledger.total += extra;
 			ledger.active += extra;
-		
+			// Last check: the new active amount of ledger must be more than ED.
+			ensure!(
+				ledger.active >= T::Currency::minimum_balance(),
+				Error::<T>::InsufficientBond
+			);
+
 			// NOTE: ledger must be updated prior to calling `Self::weight_of`.
 			Self::update_ledger(&controller, &ledger);
 			// update this staker in the sorted list, if they exist in it.
@@ -991,11 +996,11 @@ pub mod pallet {
 					T::VoterList::on_update(&stash, Self::weight_of(&ledger.stash)).defensive();
 			}
 
-				Self::deposit_event(Event::<T>::Bonded { stash, amount: extra });
+			Self::deposit_event(Event::<T>::Bonded { stash, amount: extra });
+			Ok(())
 		}
-		Ok(())
+		
 
-		}
 
 
 		/// Schedule a portion of the stash to be unlocked ready for transfer out after the bond
@@ -1830,3 +1835,6 @@ pub mod pallet {
 fn is_sorted_and_unique(list: &[u32]) -> bool {
 	list.windows(2).all(|w| w[0] < w[1])
 }
+
+
+

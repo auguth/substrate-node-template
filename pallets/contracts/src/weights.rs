@@ -48,7 +48,7 @@ use frame_support::{traits::Get, weights::{Weight, constants::RocksDbWeight}};
 use sp_std::marker::PhantomData;
 
 /// Weight functions needed for pallet_contracts.
-pub trait WeightInfo {
+pub trait ContractWeightInfo {
 	fn on_process_deletion_queue_batch() -> Weight;
 	fn on_initialize_per_trie_key(k: u32, ) -> Weight;
 	fn on_initialize_per_queue_item(q: u32, ) -> Weight;
@@ -171,7 +171,7 @@ pub trait WeightInfo {
 
 /// Weights for pallet_contracts using the Substrate node and recommended hardware.
 pub struct SubstrateWeight<T>(PhantomData<T>);
-impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
+impl<T: frame_system::Config> ContractWeightInfo for SubstrateWeight<T> {
 	/// Storage: Contracts DeletionQueue (r:1 w:0)
 	/// Proof: Contracts DeletionQueue (max_values: Some(1), max_size: Some(16642), added: 17137, mode: Measured)
 	fn on_process_deletion_queue_batch() -> Weight {
@@ -2269,7 +2269,7 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 }
 
 // For backwards compatibility and tests
-impl WeightInfo for () {
+impl ContractWeightInfo for () {
 	/// Storage: Contracts DeletionQueue (r:1 w:0)
 	/// Proof: Contracts DeletionQueue (max_values: Some(1), max_size: Some(16642), added: 17137, mode: Measured)
 	fn on_process_deletion_queue_batch() -> Weight {

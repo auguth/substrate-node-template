@@ -46,6 +46,8 @@ sp-core = { version = "7.0.0", default-features = false,git = "https://github.co
 sp-io = { version = "7.0.0", default-features = false,git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.40" }
 sp-runtime = { version = "7.0.0", default-features = false,git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.40" }
 sp-std = { version = "5.0.0", default-features = false,git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.40" }
+pallet-staking ={ version = "4.0.0-dev",default-features = false,path = "../staking"}
+sp-staking = { version = "4.0.0-dev", default-features = false,git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.40"}
 
 [dev-dependencies]
 array-bytes = "4.1"
@@ -82,10 +84,13 @@ std = [
 	"rand/std",
 	"wasmparser/std",
 	"environmental/std",
+	"pallet-staking/std",
+	"sp-staking/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
 	"rand",
 	"rand_pcg",
+	"sp-staking/runtime-benchmarks",
 ]
 try-runtime = ["frame-support/try-runtime"]

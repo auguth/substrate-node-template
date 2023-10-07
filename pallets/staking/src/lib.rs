@@ -322,8 +322,6 @@ pub use weights::WeightInfo;
 
 pub use pallet::{pallet::*, *};
 
-pub use pallet_contracts;
-
 pub(crate) const LOG_TARGET: &str = "runtime::staking";
 
 // syntactic sugar for logging.
