@@ -20,7 +20,7 @@ use crate::{
 	storage::{self, DepositAccount, WriteOutcome},
 	gasstakeinfo::{AccountStakeinfo,ContractScarcityInfo},
 	BalanceOf, CodeHash, Config, ContractInfo, ContractInfoOf, DebugBufferVec, Determinism, Error,
-	Event, Nonce, Pallet as Contracts, Schedule, System,ContractStakeinfoMap,
+	Event, Nonce, Pallet as Contracts, Schedule, System,ContractStakeinfoMap,StakeScoreMap,
 };
 use frame_support::{
 	crypto::ecdsa::ECDSAExt,
@@ -39,7 +39,7 @@ use sp_runtime::traits::{Convert, Hash};
 use sp_std::{marker::PhantomData, mem, prelude::*};
 use pallet_staking::{Pallet as Staking,Config as StakingConf, Call as SCall};
 use frame_system::Call;
-
+use sp_runtime::SaturatedConversion;
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type MomentOf<T> = <<T as Config>::Time as Time>::Moment;
 pub type SeedOf<T> = <T as frame_system::Config>::Hash;
@@ -910,6 +910,7 @@ where
 
 					let contract_stake_info: ContractScarcityInfo<T> = Contracts::gettercontractinfo(&account_id.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
 					let account_stake_info: AccountStakeinfo<T> = Contracts::getterstakeinfo(&account_id.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
+					let currenct_stake_score = Contracts::<T>::getterstakescoreinfo(&account_id.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
 
 					let new_weight = frame.nested_gas.gas_consumed();
 					let new_scarcity_info = ContractScarcityInfo::<T>::update_scarcity_info(
@@ -929,8 +930,9 @@ where
 							recent_blockhight: new_scarcity_info.recent_blockhight,
 						},
 					);
-					let i: u128 = 100;
-				    let r = Staking::<T>::contracts_bond_extra(RawOrigin::Signed(self.origin.clone()).into(),account_stake_info.delegate_to,i);
+					let stake_score: u128 = (new_weight.ref_time() * new_scarcity_info.reputation).into();
+					<StakeScoreMap<T>>::insert(&account_id.clone(), currenct_stake_score+stake_score);
+				    let r = Staking::<T>::contracts_bond_extra(RawOrigin::Signed(self.origin.clone()).into(),account_stake_info.delegate_to,stake_score);
 					let caller = self.caller();
 					Contracts::<T>::deposit_event(
 						vec![T::Hashing::hash_of(caller), T::Hashing::hash_of(account_id)],

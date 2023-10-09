@@ -959,7 +959,7 @@ pub mod pallet {
 			}
 			Ok(())
 		}
-
+		//pocs
 		#[pallet::call_index(1)]
 		#[pallet::weight(0)]
 		pub fn contracts_bond_extra(
@@ -995,6 +995,41 @@ pub mod pallet {
 				let _ =
 					T::VoterList::on_update(&stash, Self::weight_of(&ledger.stash)).defensive();
 			}
+
+			Self::deposit_event(Event::<T>::Bonded { stash, amount: extra });
+			Ok(())
+		}
+		//pocs
+		#[pallet::call_index(27)]
+		#[pallet::weight(0)]
+		pub fn contracts_bond_slashing(
+			origin: OriginFor<T>,
+			validator: <T as frame_system::Config>::AccountId,
+			score: u128,
+		) -> DispatchResult {
+
+			let stash = validator;
+			let max_additional = (score*1000000000000).saturated_into::<BalanceOf<T>>();
+
+			// <StakeinfoMap<T>>::insert(&stakerid,max_additional);
+			// let stash = pallet_contracts::Pallet::<T>::get_validator_account(&origin.clone().into());
+
+			let controller = Self::bonded(&stash).ok_or(Error::<T>::NotStash)?;
+			let mut ledger = Self::ledger(&controller).ok_or(Error::<T>::NotController)?;
+
+			let stash_balance = T::Currency::free_balance(&stash);
+
+			let extra = max_additional;
+			ledger.total -= extra;
+			ledger.active -= extra;
+			// Last check: the new active amount of ledger must be more than ED.
+			ensure!(
+				ledger.active >= Zero::zero(),
+				Error::<T>::InsufficientBond
+			);
+
+			// NOTE: ledger must be updated prior to calling `Self::weight_of`.
+			Self::update_ledger(&controller, &ledger);
 
 			Self::deposit_event(Event::<T>::Bonded { stash, amount: extra });
 			Ok(())

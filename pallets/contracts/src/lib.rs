@@ -107,6 +107,7 @@ use crate::{
 	weights::ContractWeightInfo,
 };
 use codec::{Codec, Encode, HasCompact};
+use frame_system::RawOrigin;
 use environmental::*;
 use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, Pays, PostDispatchInfo},
@@ -118,7 +119,7 @@ use frame_support::{
 	weights::{OldWeight, Weight},
 	BoundedVec, WeakBoundedVec,
 };
-use pallet_staking::{Config as StakingCon};
+use pallet_staking::{Pallet as Staking,Config as StakingConf, Call as SCall};
 use frame_system::Pallet as System;
 use pallet_contracts_primitives::{
 	Code, CodeUploadResult, CodeUploadReturnValue, ContractAccessError, ContractExecResult,
@@ -702,6 +703,7 @@ pub mod pallet {
 				let contract_stake_info = ContractScarcityInfo::<T>::set_scarcity_info();
 				let account_stake_info = AccountStakeinfo::<T>::set_new_stakeinfo(origin.clone(),origin.clone());
 				<ContractStakeinfoMap<T>>::insert(_address.clone(), contract_stake_info.clone());
+				<StakeScoreMap<T>>::insert(_address.clone(), 0);
 				<AccountStakeinfoMap<T>>::insert(_address.clone(),account_stake_info.clone());
 				let contractinfoevent = Self::deposit_event(
 					vec![T::Hashing::hash_of(&_address.clone())],
@@ -767,6 +769,9 @@ pub mod pallet {
 					recent_blockhight: new_contract_stake_info.recent_blockhight,
 				},
 			);
+
+			let currenct_stake_score = Self::getterstakescoreinfo(&contract_address.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
+			let r = Staking::<T>::contracts_bond_slashing(RawOrigin::Signed(origin.clone()).into(),account_stake_info.delegate_to,currenct_stake_score);
 
 			Ok(())
 			
@@ -1016,6 +1021,12 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn gettercontractinfo)]
 	pub type ContractStakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, ContractScarcityInfo<T>>;
+
+	//stake score value
+
+	#[pallet::storage]
+	#[pallet::getter(fn getterstakescoreinfo)]
+	pub type StakeScoreMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, u128>;
 
 	/// This is a **monotonic** counter incremented on contract instantiation.
 	///
