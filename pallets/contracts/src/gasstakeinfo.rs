@@ -39,7 +39,6 @@ pub struct AccountStakeinfo<T: frame_system::Config> {
 #[scale_info(skip_type_params(T))]
 pub struct ContractScarcityInfo<T: frame_system::Config> {
 	pub reputation: u64,
-	pub weight_history: Weight,
 	pub recent_blockhight: BlockNumberFor<T>,
 }
 
@@ -78,27 +77,24 @@ impl<T: frame_system::Config> ContractScarcityInfo<T>{
 		let current_block_number = <frame_system::Pallet<T>>::block_number();
 		Self{
 			reputation: 1,
-	        weight_history: Weight::zero(),
 			recent_blockhight: current_block_number,
 		}
 	}
 
 	pub fn update_scarcity_info(
 		current_reputation: u64,
-		new_weight_history: Weight,
 		old_block_hight: BlockNumberFor<T>,
 	)-> Self{
 
 		let current_block_hight = <frame_system::Pallet<T>>::block_number();
 
 		if current_block_hight > old_block_hight{
-		let new_reputation = current_reputation + 10;
+		let new_reputation = current_reputation + 1;
 		let new_recent_blockhight = current_block_hight;
 
 		Self{
 
 			reputation: new_reputation,
-			weight_history: new_weight_history,
 			recent_blockhight: new_recent_blockhight,
 		}
 		}
@@ -109,7 +105,6 @@ impl<T: frame_system::Config> ContractScarcityInfo<T>{
 		 Self{
 
 			reputation: new_reputation,
-			weight_history: new_weight_history,
 			recent_blockhight: new_recent_blockhight,
 		}
 		}
@@ -118,10 +113,3 @@ impl<T: frame_system::Config> ContractScarcityInfo<T>{
 
 
 }
-
-// fn get_validator_account(account: T::AccountId)-> T::AccountId{
-// 	let account_stake_info: AccountStakeinfo<T>= Contracts::getterstakeinfo(&origin.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
-// 	let staker = account_stake_info.delegate_to;
-
-// 	staker
-// }

@@ -710,7 +710,6 @@ pub mod pallet {
 					Event::ContractStakeinfoevnet {
 						contract_address: _address.clone(),
 						reputation: contract_stake_info.reputation,
-						weight_history: contract_stake_info.weight_history,
 						recent_blockhight: contract_stake_info.recent_blockhight,
 					},
 				);
@@ -765,13 +764,13 @@ pub mod pallet {
 				Event::ContractStakeinfoevnet {
 					contract_address: contract_address.clone(),
 					reputation: new_contract_stake_info.reputation,
-					weight_history: new_contract_stake_info.weight_history,
 					recent_blockhight: new_contract_stake_info.recent_blockhight,
 				},
 			);
 
 			let currenct_stake_score = Self::getterstakescoreinfo(&contract_address.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
 			let r = Staking::<T>::contracts_bond_slashing(RawOrigin::Signed(origin.clone()).into(),account_stake_info.delegate_to,currenct_stake_score);
+			<StakeScoreMap<T>>::insert(&contract_address.clone(), 0);
 
 			Ok(())
 			
@@ -896,7 +895,6 @@ pub mod pallet {
 		ContractStakeinfoevnet {
 			contract_address: T::AccountId,
 		    reputation: u64,
-		    weight_history: Weight,
 			recent_blockhight: BlockNumberFor<T>,
 		},
 
