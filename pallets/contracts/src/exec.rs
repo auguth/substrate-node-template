@@ -37,9 +37,7 @@ use sp_core::ecdsa::Public as ECDSAPublic;
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::blake2_256};
 use sp_runtime::traits::{Convert, Hash};
 use sp_std::{marker::PhantomData, mem, prelude::*};
-use pallet_staking::{Pallet as Staking,Config as StakingConf, Call as SCall};
-use frame_system::Call;
-use sp_runtime::SaturatedConversion;
+use pallet_staking::{Pallet as Staking};
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type MomentOf<T> = <<T as Config>::Time as Time>::Moment;
 pub type SeedOf<T> = <T as frame_system::Config>::Hash;
@@ -906,7 +904,7 @@ where
 				},
 				(ExportedFunction::Call, None) => {
 
-				///pocs call
+				//pocs call
 
 					let contract_stake_info: ContractScarcityInfo<T> = Contracts::gettercontractinfo(&account_id.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;
 					let account_stake_info: AccountStakeinfo<T> = Contracts::getterstakeinfo(&account_id.clone()).ok_or(<Error<T>>::ContractAddressNotFound)?;

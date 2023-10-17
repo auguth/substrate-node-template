@@ -42,8 +42,6 @@ use sp_std::prelude::*;
 
 mod impls;
 
-mod gasstakeinfo;
-
 pub use impls::*;
 
 use crate::{
@@ -561,12 +559,6 @@ pub mod pallet {
 	#[pallet::getter(fn current_planned_session)]
 	pub type CurrentPlannedSession<T> = StorageValue<_, SessionIndex, ValueQuery>;
 
-	///Added mapping of stakeinfo for pocs
-
-	#[pallet::storage]
-	#[pallet::getter(fn stakeinfo)]
-	pub type StakeinfoMap<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>>;
-
 
 	/// Indices of validators that have offended in the active era and whether they are currently
 	/// disabled.
@@ -866,7 +858,6 @@ pub mod pallet {
 			let stash = ensure_signed(origin)?;
 			let i: u128 = 0;
 			let value: BalanceOf<T> = i.saturated_into::<BalanceOf<T>>();
-			<StakeinfoMap<T>>::insert(&stash, value);
 			if <Bonded<T>>::contains_key(&stash) {
 				return Err(Error::<T>::AlreadyBonded.into())
 			}
@@ -960,6 +951,8 @@ pub mod pallet {
 			Ok(())
 		}
 		//pocs
+
+		//TODO: The funtion access should be restricted 
 		#[pallet::call_index(1)]
 		#[pallet::weight(0)]
 		pub fn contracts_bond_extra(
@@ -999,7 +992,9 @@ pub mod pallet {
 			Self::deposit_event(Event::<T>::Bonded { stash, amount: extra });
 			Ok(())
 		}
+		
 		//pocs
+		//TODO: The funtion access should be restricted 
 		#[pallet::call_index(27)]
 		#[pallet::weight(0)]
 		pub fn contracts_bond_slashing(

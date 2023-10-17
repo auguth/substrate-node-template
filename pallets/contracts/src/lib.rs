@@ -119,7 +119,7 @@ use frame_support::{
 	weights::{OldWeight, Weight},
 	BoundedVec, WeakBoundedVec,
 };
-use pallet_staking::{Pallet as Staking,Config as StakingConf, Call as SCall};
+use pallet_staking::{Pallet as Staking,};
 use frame_system::Pallet as System;
 use pallet_contracts_primitives::{
 	Code, CodeUploadResult, CodeUploadReturnValue, ContractAccessError, ContractExecResult,
@@ -698,7 +698,7 @@ pub mod pallet {
 				}
 			}
 
-			/// impl maps of pocs 
+			// impl maps of pocs 
 			output.result.as_ref().map(|(_address, _result)| {
 				let contract_stake_info = ContractScarcityInfo::<T>::set_scarcity_info();
 				let account_stake_info = AccountStakeinfo::<T>::set_new_stakeinfo(origin.clone(),origin.clone());
